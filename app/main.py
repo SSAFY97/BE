@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.chat import router as chat_router
@@ -9,6 +10,14 @@ from app.core.database import init_db
 from app.core.response import build_response
 
 app = FastAPI(title="LocalHub API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(posts_router, prefix="/api")
 app.include_router(locations_router, prefix="/api")
