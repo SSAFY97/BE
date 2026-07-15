@@ -1,13 +1,12 @@
 from datetime import datetime
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
 class PostCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     content: str = Field(min_length=1, max_length=2000)
-    password: str = Field(min_length=1, max_length=100)
+    writer: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=4, max_length=100)
 
 
 class PostUpdateRequest(PostCreateRequest):
@@ -15,26 +14,31 @@ class PostUpdateRequest(PostCreateRequest):
 
 
 class PostDeleteRequest(BaseModel):
-    password: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=4, max_length=100)
 
 
-class PostResponse(BaseModel):
+class PostListItem(BaseModel):
     id: int
     title: str
-    content: str
+    writer: str
     view_count: int
     like_count: int
     created_at: datetime
+
+
+class PostResponse(PostListItem):
+    content: str
     updated_at: datetime
 
 
 class PostListResponse(BaseModel):
-    items: list[PostResponse]
+    items: list[PostListItem]
     page: int
     size: int
     total: int
     total_pages: int
 
 
-class PostCreateResponse(BaseModel):
-    id: int
+class PostLikeResponse(BaseModel):
+    post_id: int
+    like_count: int

@@ -7,8 +7,8 @@ class PostRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def create(self, title: str, content: str, password: str) -> Post:
-        post = Post(title=title, content=content, password=password)
+    def create(self, title: str, content: str, writer: str, password: str) -> Post:
+        post = Post(title=title, content=content, writer=writer, password=password)
         self.session.add(post)
         self.session.commit()
         self.session.refresh(post)
@@ -27,9 +27,10 @@ class PostRepository:
         posts = query.order_by(Post.created_at.desc()).offset((page - 1) * size).limit(size).all()
         return posts, total
 
-    def update(self, post: Post, title: str, content: str) -> Post:
+    def update(self, post: Post, title: str, content: str, writer: str) -> Post:
         post.title = title
         post.content = content
+        post.writer = writer
         self.session.commit()
         self.session.refresh(post)
         return post
@@ -38,10 +39,16 @@ class PostRepository:
         self.session.delete(post)
         self.session.commit()
 
-    def increment_view_count(self, post_id: int) -> None:
-        self.session.query(Post).filter(Post.id == post_id).update({Post.view_count: Post.view_count + 1})
+    def increment_view_count(self, post_id: int) -> Post | None:
+        self.session.query(Post).filter(Post.id == post_id).update(
+            {Post.view_count: Post.view_count + 1}, synchronize_session=False
+        )
         self.session.commit()
+        return self.get_by_id(post_id)
 
-    def increment_like_count(self, post_id: int) -> None:
-        self.session.query(Post).filter(Post.id == post_id).update({Post.like_count: Post.like_count + 1})
+    def increment_like_count(self, post_id: int) -> Post | None:
+        self.session.query(Post).filter(Post.id == post_id).update(
+            {Post.like_count: Post.like_count + 1}, synchronize_session=False
+        )
         self.session.commit()
+        return self.get_by_id(post_id)

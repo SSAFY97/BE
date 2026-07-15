@@ -4,3 +4,5 @@ sqlalchemy
 alembic
 python-dotenv
 pydantic
+openai
+httpx

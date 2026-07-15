@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, func
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, DateTime, Integer, String, Text, func
 
 from app.core.database import Base
 
@@ -9,7 +8,8 @@ class Post(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
-    content = Column(String(2000), nullable=False)
+    content = Column(Text, nullable=False)
+    writer = Column(String(100), nullable=False)
     password = Column(String(100), nullable=False)
     view_count = Column(Integer, default=0, nullable=False)
     like_count = Column(Integer, default=0, nullable=False)

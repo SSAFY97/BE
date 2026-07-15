@@ -1,13 +1,13 @@
 from fastapi import APIRouter
 
-from app.core.response import build_response
+from app.core.response import CommonResponse, build_response
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.chat_service import ChatService
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-@router.post("", response_model=dict)
+@router.post("", response_model=CommonResponse[ChatResponse])
 def chat(request: ChatRequest) -> dict[str, object]:
     service = ChatService()
     payload = service.ask(request)

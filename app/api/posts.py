@@ -1,15 +1,15 @@
 from typing import Generator
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
-from app.core.response import build_response
+from app.core.response import CommonResponse, build_response
 from app.repositories.post_repository import PostRepository
 from app.schemas.post import (
     PostCreateRequest,
-    PostCreateResponse,
     PostDeleteRequest,
+    PostLikeResponse,
     PostListResponse,
     PostResponse,
     PostUpdateRequest,
@@ -32,10 +32,10 @@ def get_post_service(db: Session = Depends(get_db)) -> PostService:
     return PostService(repository=repository)
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=CommonResponse[PostListResponse])
 def list_posts(
-    page: int = 1,
-    size: int = 10,
+    page: int = Query(default=1, ge=1),
+    size: int = Query(default=10, ge=1, le=100),
     keyword: str | None = None,
     service: PostService = Depends(get_post_service),
 ) -> dict[str, object]:
@@ -43,19 +43,19 @@ def list_posts(
     return build_response(200, "게시글 목록 조회에 성공했습니다.", payload.model_dump())
 
 
-@router.get("/{post_id}", response_model=dict)
+@router.get("/{post_id}", response_model=CommonResponse[PostResponse])
 def get_post(post_id: int, service: PostService = Depends(get_post_service)) -> dict[str, object]:
     payload = service.get_post(post_id)
     return build_response(200, "게시글 조회에 성공했습니다.", payload.model_dump())
 
 
-@router.post("", response_model=dict, status_code=201)
+@router.post("", response_model=CommonResponse[PostResponse], status_code=201)
 def create_post(request: PostCreateRequest, service: PostService = Depends(get_post_service)) -> dict[str, object]:
     payload = service.create_post(request)
     return build_response(201, "게시글 작성에 성공했습니다.", payload.model_dump())
 
 
-@router.put("/{post_id}", response_model=dict)
+@router.put("/{post_id}", response_model=CommonResponse[PostResponse])
 def update_post(
     post_id: int,
     request: PostUpdateRequest,
@@ -65,7 +65,7 @@ def update_post(
     return build_response(200, "게시글 수정에 성공했습니다.", payload.model_dump())
 
 
-@router.delete("/{post_id}", response_model=dict)
+@router.delete("/{post_id}", response_model=CommonResponse[None])
 def delete_post(
     post_id: int,
     request: PostDeleteRequest,
@@ -75,7 +75,7 @@ def delete_post(
     return build_response(200, "게시글 삭제에 성공했습니다.", None)
 
 
-@router.post("/{post_id}/likes", response_model=dict)
+@router.post("/{post_id}/likes", response_model=CommonResponse[PostLikeResponse])
 def like_post(post_id: int, service: PostService = Depends(get_post_service)) -> dict[str, object]:
     payload = service.like_post(post_id)
     return build_response(200, "게시글 좋아요에 성공했습니다.", payload.model_dump())

@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from app.core.response import build_response
+from app.core.response import CommonResponse, build_response
 from app.schemas.location import LocationDetailResponse, LocationListResponse
 from app.services.location_service import LocationService
 
 router = APIRouter(prefix="/locations", tags=["locations"])
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=CommonResponse[LocationListResponse])
 def list_locations(
     category: str | None = None,
     keyword: str | None = None,
@@ -18,7 +18,7 @@ def list_locations(
     return build_response(200, "지역 정보 조회에 성공했습니다.", payload.model_dump())
 
 
-@router.get("/{location_id}", response_model=dict)
+@router.get("/{location_id}", response_model=CommonResponse[LocationDetailResponse])
 def get_location(location_id: str) -> dict[str, object]:
     service = LocationService()
     try:

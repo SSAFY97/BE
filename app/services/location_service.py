@@ -50,11 +50,12 @@ class LocationService:
                 if keyword_lower in item["title"].lower() or keyword_lower in item.get("address", "").lower()
             ]
 
+        total = len(filtered)
         if limit is not None:
             filtered = filtered[:limit]
 
         items = [LocationItem(**item) for item in filtered]
-        return LocationListResponse(items=items, total=len(items), limit=limit or len(items))
+        return LocationListResponse(items=items, total=total)
 
     def get_location_by_id(self, location_id: str) -> LocationDetailResponse:
         locations = self._load_data()

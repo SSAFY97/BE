@@ -16,7 +16,6 @@ class LocationItem(BaseModel):
 class LocationListResponse(BaseModel):
     items: list[LocationItem]
     total: int
-    limit: int
 
 
 class LocationDetailResponse(LocationItem):
