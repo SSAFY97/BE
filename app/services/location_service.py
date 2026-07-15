@@ -35,7 +35,12 @@ class LocationService:
                 )
         return locations
 
-    def get_locations(self, category: str | None = None, keyword: str | None = None, limit: int | None = None) -> LocationListResponse:
+    def get_locations(
+        self,
+        category: str | None = None,
+        keyword: str | None = None,
+        limit: int | None = None,
+    ) -> LocationListResponse:
         locations = self._load_data()
         filtered = locations
 

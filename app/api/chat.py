@@ -10,5 +10,8 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 @router.post("", response_model=CommonResponse[ChatResponse])
 def chat(request: ChatRequest) -> dict[str, object]:
     service = ChatService()
-    payload = service.ask(request)
+    try:
+        payload = service.ask(request)
+    finally:
+        service.close()
     return build_response(200, "챗봇 응답에 성공했습니다.", payload.model_dump())
