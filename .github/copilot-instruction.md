@@ -1,469 +1,529 @@
-# LocalHub FastAPI Backend Copilot Instructions
+# LocalHub Project Instructions
 
-## 1. Project Overview
+## 1. Project Context
 
-Project Name:
-LocalHub
+This repository implements the LocalHub backend for an SSAFY team project.
 
-Purpose:
-공공데이터 기반 지역 정보 공유 커뮤니티 서비스
+LocalHub is a Seoul regional information sharing service based on provided public-data JSON files.
 
-Backend Role:
-FastAPI 기반 REST API 서버 구축
+The backend must satisfy the approved RFB and MVP requirements.
 
-Main Features:
-- 서울 권역 JSON 데이터 기반 지역 정보 제공
-- 익명 커뮤니티 CRUD
-- 비밀번호 기반 게시글 수정/삭제
-- OpenAI 기반 지역정보 챗봇 API
-- SQLite 데이터 저장
-- 배포 가능한 Backend API 제공
+The RFB and approved API specification are the source of truth.
+
+Do not add, remove, or reinterpret requirements without an explicit user request.
+
+Prefer the simplest implementation that satisfies the MVP.
+Do not over-engineer for hypothetical future requirements.
 
 
----
+## 2. Required Technology Stack
 
-# 2. Technology Stack
+Use the following technologies:
 
-Backend Framework:
+- Python
 - FastAPI
-
-Language:
-- Python 3.11+
-
-Database:
+- SQLAlchemy ORM
 - SQLite
+- OpenAI API
+- Render for backend deployment
 
-ORM:
-- SQLAlchemy 2.x
+Do not replace the required framework, ORM, or database.
 
-Migration:
-- Alembic (선택)
+Do not introduce another database such as PostgreSQL or MySQL.
 
-Validation:
-- Pydantic v2
+Do not introduce Redis, Kafka, Celery, Elasticsearch, or other infrastructure unless explicitly requested.
 
-Server:
-- Uvicorn
+Do not add a new production dependency unless it is necessary for the requested feature.
 
-Environment:
-- dotenv (.env)
+When adding a dependency:
+1. Explain why the existing stack cannot reasonably solve the problem.
+2. Explain the benefit of the selected dependency.
+3. Mention at least one reasonable alternative.
 
-Deployment:
-- Render
 
+## 3. MVP Scope
 
----
+The backend MVP contains only the following domains:
 
-# 3. Development Rules
+1. Seoul regional information
+2. Anonymous community posts
+3. Regional information chatbot
 
-## General Rules
+Selected optional community features:
 
-- 모든 코드는 Python PEP8 스타일 준수
-- 함수명은 snake_case 사용
-- 클래스명은 PascalCase 사용
-- 타입 힌트 필수 적용
-- 비즈니스 로직과 API Router 로직 분리
-- 하나의 파일에 모든 코드를 작성하지 않는다
+- Post search
+- Post view count
+- Post likes
 
+Do not implement the following unless explicitly requested:
 
-Example:
+- User registration
+- Login
+- JWT authentication
+- OAuth
+- Role or permission systems
+- Comments
+- Bookmarking
+- Image upload
+- WebSocket notifications
+- Chat rooms
+- Chat message persistence
+- Redis caching
+- Admin APIs
 
-Good:
-```python
-def get_post(post_id: int) -> Post:
-    pass
 
-Bad:
+## 4. Architecture
 
-def getPost(id):
-    pass
-4. Backend Architecture
-
-프로젝트 구조는 아래 형태를 따른다.
-
-backend/
-
-├── app/
-│
-├── main.py
-│
-├── database/
-│   ├── connection.py
-│   └── session.py
-│
-├── models/
-│   └── post.py
-│
-├── schemas/
-│   └── post.py
-│
-├── routers/
-│   ├── posts.py
-│   ├── chat.py
-│   └── locations.py
-│
-├── services/
-│   ├── post_service.py
-│   └── chat_service.py
-│
-├── repositories/
-│   └── post_repository.py
-│
-├── data/
-│   └── seoul.json
-│
-├── core/
-│   └── config.py
-│
-└── utils/
-
-requirements.txt
-.env
-.gitignore
-
-5. Database Rules
-
-Database:
-SQLite 사용
-
-SQLAlchemy ORM 필수 적용
-
-주요 테이블:
-
-posts
-
-게시글 정보 저장
-
-Columns:
-
-id
-title
-content
-password
-view_count
-like_count
-created_at
-updated_at
-
-Requirements:
-
-게시글은 반드시 DB 저장
-JSON 파일에 게시글 저장 금지
-ORM 기반 CRUD 구현
-6. Community API Requirements
-Post API
-
-Base URL:
-
-/api/posts
-
-Required APIs:
-
-게시글 목록 조회
-
-GET
-
-/api/posts
-
-Response:
-
-게시글 목록
-조회수 포함
-게시글 상세 조회
-
-GET
-
-/api/posts/{post_id}
-
-Requirement:
-
-조회 시 view_count 증가
-게시글 작성
-
-POST
-
-/api/posts
-
-Request:
-
-{
-"title":"",
-"content":"",
-"password":""
-}
-
-Rules:
-
-회원가입 없음
-로그인 없음
-비밀번호 기반 인증
-게시글 수정
-
-PUT
-
-/api/posts/{post_id}
-
-Rules:
-
-입력 password 비교
-일치 시 수정 가능
-게시글 삭제
-
-DELETE
-
-/api/posts/{post_id}
-
-Rules:
-
-입력 password 검증
-일치 시 삭제
-7. Search Feature
-
-Optional Feature:
-게시글 검색
-
-Implementation:
-
-Query Parameter 사용
-
-Example:
-
-GET /api/posts?keyword=서울
-
-검색 대상:
-
-title
-content
-8. Like Feature
-
-Optional Feature:
-좋아요
-
-Implementation:
-
-단순 카운트 증가 방식
-
-API:
-
-POST
-
-/api/posts/{post_id}/like
-
-Response:
-
-{
-"like_count":10
-}
-9. JSON Data Handling
-
-Provided Data:
-
-서울 권역 JSON
-
-Location:
-
-app/data/seoul.json
-
-Rules:
-
-JSON 원본 데이터 수정 금지
-Service Layer에서 데이터 조회
-Router에서 직접 JSON 접근 금지
-
-Example:
+Use the following dependency direction:
 
 Router
+-> Service
+-> Repository
+-> SQLAlchemy
+-> SQLite
 
-↓
+Recommended project structure:
 
-Service
+app/
+├── main.py
+├── api/
+│   ├── posts.py
+│   ├── locations.py
+│   └── chat.py
+├── models/
+│   └── post.py
+├── schemas/
+│   ├── post.py
+│   ├── location.py
+│   └── chat.py
+├── services/
+│   ├── post_service.py
+│   ├── location_service.py
+│   └── chat_service.py
+├── repositories/
+│   └── post_repository.py
+├── core/
+│   ├── config.py
+│   └── database.py
+└── data/
+    └── seoul.json
 
-↓
+Keep responsibilities separated.
 
-JSON Repository
+Router:
+- Handles HTTP request and response concerns.
+- Performs FastAPI dependency injection.
+- Does not contain database queries.
+- Does not contain OpenAI prompt construction.
 
-구조 유지
+Service:
+- Contains application and business logic.
+- Coordinates repositories and other services.
 
-10. Chatbot API
+Repository:
+- Contains SQLAlchemy database access logic.
+- Does not contain HTTP-specific logic.
 
-Required API:
+Do not create abstractions that have only one trivial implementation unless they provide a clear separation of responsibility.
 
-POST
 
-/api/chat
+## 5. Regional Information Data
 
-Purpose:
+The provided Seoul JSON file is the source of truth for regional information.
 
-서울 지역 정보 질의응답
+Do not directly call external public-data APIs.
+
+Do not scrape external websites.
+
+Do not migrate Seoul regional data into SQLite unless explicitly requested.
+
+Regional information should be loaded and searched through LocationService.
+
+Treat the provided JSON data as read-only.
+
+Supported regional information categories are based on the actual provided JSON dataset.
+
+Do not invent fields that are not present in the JSON data.
+
+Before implementing location APIs:
+1. Inspect the actual JSON schema.
+2. Identify common and category-specific fields.
+3. Design response schemas based on the real data.
+
+Never assume latitude, longitude, date, or address fields exist without inspecting the dataset.
+
+
+## 6. Community Post Rules
+
+Community posts are anonymous.
+
+Do not implement user authentication.
+
+A post contains:
+
+- id
+- title
+- content
+- password
+- view_count
+- like_count
+- created_at
+- updated_at
+
+The password is used only to authorize post modification and deletion.
+
+According to the project RFB, the post password is intentionally stored and compared as plain text for educational purposes.
+
+Do not replace this behavior with password hashing unless explicitly requested.
+
+However:
+
+- Never include password in an API response.
+- Never log password values.
+- Never expose password through exception messages.
+- Never include password in repr or debug output intentionally.
+
+Password mismatch must return HTTP 403.
+
+Missing posts must return HTTP 404.
+
+
+## 7. API Contract
+
+Preserve the following API contract.
+
+### Regional information
+
+GET /api/locations
+
+Query parameters:
+
+- category: optional
+- keyword: optional
+- limit: optional
+
+GET /api/locations/{location_id}
+
+
+### Community posts
+
+GET /api/posts
+
+Query parameters:
+
+- page: default 1
+- size: default 10
+- keyword: optional
+
+Search the title and content when keyword is provided.
+
+GET /api/posts/{post_id}
+
+The detail API increments the post view count.
+
+POST /api/posts
 
 Request:
 
 {
-"message":"서울 축제 추천해줘"
+  "title": "string",
+  "content": "string",
+  "password": "string"
+}
+
+PUT /api/posts/{post_id}
+
+Request:
+
+{
+  "title": "string",
+  "content": "string",
+  "password": "string"
+}
+
+DELETE /api/posts/{post_id}
+
+Request:
+
+{
+  "password": "string"
+}
+
+POST /api/posts/{post_id}/likes
+
+Increment the post like count.
+
+The backend does not track user-specific duplicate likes because the service has no user identity.
+
+
+### Chatbot
+
+POST /api/chat
+
+Request:
+
+{
+  "message": "string"
 }
 
 Response:
 
 {
-"answer":"..."
+  "answer": "string",
+  "references": []
 }
 
-Implementation:
 
-OpenAI API 활용 가능
-API Key는 반드시 환경변수 사용
-코드 내부 Key 작성 금지
-11. Environment Rules
+### Health Check
 
-절대 금지:
+GET /health
 
-OPENAI_API_KEY="xxxxx"
+Response:
 
-사용:
+{
+  "status": "ok"
+}
 
-.env
+
+## 8. View Count and Like Count
+
+Prefer database-side increment operations.
+
+Avoid the following read-modify-write pattern when incrementing counters:
+
+post.view_count += 1
+
+Prefer an atomic database update equivalent to:
+
+UPDATE posts
+SET view_count = view_count + 1
+WHERE id = :post_id;
+
+Apply the same principle to like_count.
+
+Do not introduce distributed locking or Redis for counters.
+
+
+## 9. Chatbot Rules
+
+POST /api/chat must answer questions using:
+
+1. Provided Seoul regional JSON data.
+2. Community post data stored in SQLite.
+
+The chatbot must be grounded in retrieved project data.
+
+Recommended flow:
+
+User Question
+-> Retrieve relevant Seoul JSON data
+-> Retrieve relevant community posts when necessary
+-> Build context
+-> Call OpenAI API
+-> Return answer and references
+
+Do not send the entire Seoul JSON dataset to the OpenAI API for every request.
+
+Retrieve a small set of relevant records first.
+
+Do not allow the model to present unsupported regional information as confirmed fact.
+
+The system prompt must instruct the model to say that the information cannot be confirmed from the provided Seoul data when relevant information is unavailable.
+
+Chat history is managed by the frontend.
+
+Do not create chat_rooms or chat_messages tables.
+
+Do not persist conversation history in SQLite unless explicitly requested.
+
+
+## 10. Environment and Security
+
+All sensitive values must be managed through environment variables.
+
+Examples:
+
+- OPENAI_API_KEY
+- DATABASE_URL or database path
+- External service credentials
+
+Use .env for local development.
+
+.env must be included in .gitignore.
+
+Never hard-code API keys.
+
+Never commit secrets.
+
+Provide .env.example containing variable names only.
+
+Example:
 
 OPENAI_API_KEY=
 DATABASE_URL=
 
-config.py에서 관리
+Do not include real secret values in:
+
+- Source code
+- README
+- Tests
+- Logs
+- Example requests
+
+
+## 11. FastAPI and Schema Rules
+
+Use Pydantic request and response schemas.
+
+Define response_model when practical.
+
+Do not return SQLAlchemy ORM models directly without an appropriate response schema.
+
+Validate input at the API boundary.
+
+Use clear HTTP status codes.
+
+Use HTTPException or centralized exception handling consistently.
+
+Avoid broad exception handling such as:
+
+except Exception:
+    return ...
+
+Do not silently swallow exceptions.
+
+Do not expose internal stack traces or OpenAI API errors directly to clients.
+
+
+## 12. Coding Style
+
+Prefer clear and readable Python code.
+
+Use:
+
+- snake_case for functions and variables
+- PascalCase for classes
+- Explicit type hints
+- Small functions with clear responsibilities
+
+Avoid unnecessary comments that only repeat the code.
+
+Comments should explain:
+
+- Why a non-obvious decision was made.
+- An intentional MVP limitation.
+- Behavior required specifically by the RFB.
+
+Do not create generic utility classes without a concrete use case.
+
+Avoid premature abstraction.
+
+
+## 13. Change Workflow
+
+Before modifying code:
+
+1. Inspect the related files.
+2. Identify the current implementation and project structure.
+3. Confirm the requested change against the RFB and MVP scope.
+4. Identify affected APIs, schemas, services, repositories, and tests.
+5. Plan the smallest reasonable change.
+
+Do not immediately rewrite working code.
+
+Do not perform unrelated refactoring while implementing a feature.
+
+When an existing design conflicts with the requested feature:
+1. Explain the conflict.
+2. Present reasonable alternatives.
+3. Compare their advantages and disadvantages.
+4. Select the smallest solution that satisfies the MVP.
+
+
+## 14. Verification
+
+After making a change:
+
+1. Run relevant tests.
+2. Check application startup.
+3. Verify affected API behavior.
+4. Review the diff for unrelated changes.
+5. Check that passwords are not exposed.
+6. Check that secrets are not committed.
+7. Confirm that the API contract has not changed unintentionally.
+
+For API changes, verify at least:
+
+- Normal request
+- Resource not found
+- Validation failure
+- Password mismatch when applicable
+
+Do not claim a test passed unless the test command was actually executed.
+
+
+## 15. Decision Rationale
+
+For a non-trivial technical decision, record:
+
+- Problem
+- Considered Options
+- Selected Option
+- Reason for Selection
+- Advantages
+- Disadvantages
+- MVP Trade-off
 
 Example:
 
-from dotenv import load_dotenv
-import os
+### Problem
 
-load_dotenv()
+Post view counts may lose increments under concurrent requests.
 
-OPENAI_API_KEY=os.getenv(
-"OPENAI_API_KEY"
-)
-12. Security Rules
+### Considered Options
 
-Must:
+1. ORM entity read-modify-write
+2. Atomic SQL UPDATE
+3. Redis counter
 
-.env 파일 Git 제외
-Secret Key 코드 작성 금지
-API Key 노출 금지
+### Selected Option
 
-.gitignore:
+Atomic SQL UPDATE
 
-.env
-__pycache__/
-*.db
-13. Error Handling
+### Reason for Selection
 
-모든 API는 HTTP Exception 처리
+It prevents the read-modify-write lost update pattern while remaining within the existing SQLite architecture.
 
-Example:
+### Advantages
 
-raise HTTPException(
-status_code=404,
-detail="Post not found"
-)
-14. API Documentation
+- Simple
+- No additional infrastructure
+- Appropriate for MVP
 
-FastAPI 기본 Swagger 유지
+### Disadvantages
 
-접속:
+- Limited compared with distributed counter architectures
 
-/docs
+### MVP Trade-off
 
-모든 Endpoint:
+Redis was rejected because distributed counter scalability is outside the project scope.
 
-summary 작성
-response model 작성
-status code 명시
-15. Testing Rules
 
-가능하면 pytest 작성
+## 16. Final Response Format
 
-중요 테스트:
+After completing a coding task, summarize:
 
-게시글 생성
-게시글 조회
-수정 비밀번호 검증
-삭제 비밀번호 검증
-검색 기능
-좋아요 증가
-16. Git Rules
+1. Changed files
+2. Implemented behavior
+3. Technical decisions and rationale
+4. Alternatives considered
+5. Tests or verification actually performed
+6. Remaining limitations or risks
 
-Commit Convention:
+Clearly distinguish:
 
-feat:
-fix:
-refactor:
-docs:
-test:
+- Verified facts
+- Assumptions
+- Work not performed
 
-Example:
-
-feat: add post CRUD API
-fix: resolve password validation error
-17. Copilot Agent Behavior Rules
-
-Copilot Agent는 다음 순서로 작업한다.
-
-기존 프로젝트 구조 확인
-요구사항 분석
-필요한 파일 생성
-DB 모델 작성
-Schema 작성
-Repository 작성
-Service 작성
-Router 작성
-테스트 작성
-실행 오류 확인
-
-코드 작성 전:
-
-기존 코드 영향 분석
-중복 코드 확인
-필요한 의존성 확인
-
-코드 작성 후:
-
-import 오류 확인
-FastAPI 실행 가능 여부 확인
-Swagger 등록 확인
-18. MVP Scope Control
-
-현재 MVP 범위:
-
-Must Have:
-
-YES
-
-JSON 데이터 연동
-CRUD
-Chat API
-SQLite
-FastAPI
-배포 준비
-
-Should Have:
-
-YES
-
-게시글 검색
-조회수
-좋아요
-
-제외:
-
-NO
-
-WebSocket
-지도 API
-날씨 API
-경로 안내
-
-불필요한 기능 추가 금지.
-
-Final Goal
-
-완성 목표:
-
-"서울 공공데이터 기반 익명 지역 커뮤니티 + AI 지역정보 챗봇 서비스를 제공하는 안정적인 FastAPI REST API 서버 구축"
-
-Copilot Agent는 항상 MVP 범위와 RFP 요구사항을 우선하여 개발한다.
+Never state that code was tested if tests were not run.
