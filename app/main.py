@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from app.api.chat import router as chat_router
 from app.api.locations import router as locations_router
 from app.api.posts import router as posts_router
+from app.api.routes import router as routes_router
 from app.core.database import init_db
 from app.core.response import CommonResponse, build_response
 
@@ -22,6 +23,7 @@ app.add_middleware(
 app.include_router(posts_router, prefix="/api")
 app.include_router(locations_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
+app.include_router(routes_router, prefix="/api")
 
 
 @app.exception_handler(RequestValidationError)

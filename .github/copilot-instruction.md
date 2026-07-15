@@ -1,4 +1,4 @@
-# LocalHub Backend Instructions
+# LocalHub Project Instructions
 
 ## 1. Project Context
 
@@ -13,10 +13,7 @@ The RFB and approved API specification are the source of truth.
 Do not add, remove, or reinterpret requirements without an explicit user request.
 
 Prefer the simplest implementation that satisfies the MVP.
-
 Do not over-engineer for hypothetical future requirements.
-
-Do not perform unrelated refactoring while implementing a feature.
 
 
 ## 2. Required Technology Stack
@@ -39,7 +36,6 @@ Do not introduce Redis, Kafka, Celery, Elasticsearch, or other infrastructure un
 Do not add a new production dependency unless it is necessary for the requested feature.
 
 When adding a dependency:
-
 1. Explain why the existing stack cannot reasonably solve the problem.
 2. Explain the benefit of the selected dependency.
 3. Mention at least one reasonable alternative.
@@ -97,7 +93,6 @@ app/
 ├── models/
 │   └── post.py
 ├── schemas/
-│   ├── common.py
 │   ├── post.py
 │   ├── location.py
 │   └── chat.py
@@ -132,154 +127,7 @@ Repository:
 Do not create abstractions that have only one trivial implementation unless they provide a clear separation of responsibility.
 
 
-## 5. Common API Response Format
-
-All application APIs must use the following common response structure.
-
-Success response:
-
-```json
-{
-  "response": 200,
-  "message": "요청에 성공했습니다.",
-  "data": {}
-}
-```
-
-Fields:
-
-- `response`: HTTP status code represented as an integer.
-- `message`: Human-readable Korean response message.
-- `data`: Actual response payload or `null`.
-
-The `response` field must match the actual HTTP status code.
-
-Use Korean messages consistently.
-
-Do not return raw ORM models, dictionaries, lists, primitive values, or FastAPI default error structures directly from application endpoints.
-
-All success and error responses must follow:
-
-```json
-{
-  "response": 200,
-  "message": "요청에 성공했습니다.",
-  "data": {}
-}
-```
-
-Allowed field names:
-
-- `response`
-- `message`
-- `data`
-
-Do not replace these fields with:
-
-- `status`
-- `statusCode`
-- `code`
-- `result`
-- `detail`
-- `error`
-
-
-## 6. Common Response Implementation
-
-Implement a reusable generic common response schema.
-
-Recommended concept:
-
-```python
-class CommonResponse(BaseModel, Generic[T]):
-    response: int
-    message: str
-    data: T | None = None
-```
-
-Use the Pydantic generic model pattern supported by the Pydantic version installed in the project.
-
-Do not manually duplicate `response`, `message`, and `data` in every response schema.
-
-Do not create an unnecessarily complex response factory, response hierarchy, or abstract base class.
-
-A simple `CommonResponse[T]` generic schema is preferred for this MVP.
-
-Use `response_model=CommonResponse[SpecificResponse]` when practical.
-
-
-## 7. Error Response Format
-
-Error responses must use the same common response structure.
-
-Not found:
-
-```json
-{
-  "response": 404,
-  "message": "게시글을 찾을 수 없습니다.",
-  "data": null
-}
-```
-
-Password mismatch:
-
-```json
-{
-  "response": 403,
-  "message": "비밀번호가 일치하지 않습니다.",
-  "data": null
-}
-```
-
-Validation failure:
-
-```json
-{
-  "response": 422,
-  "message": "요청 데이터가 올바르지 않습니다.",
-  "data": null
-}
-```
-
-Internal server error:
-
-```json
-{
-  "response": 500,
-  "message": "서버 내부 오류가 발생했습니다.",
-  "data": null
-}
-```
-
-Register FastAPI exception handlers so that:
-
-- `HTTPException`
-- Request validation errors
-- Unhandled internal errors
-
-are converted to the common API response format.
-
-Do not expose FastAPI's default response:
-
-```json
-{
-  "detail": "..."
-}
-```
-
-Do not expose:
-
-- Stack traces
-- SQLAlchemy error messages
-- SQLite error messages
-- OpenAI API error details
-- Secret values
-
-through the client response message.
-
-
-## 8. Regional Information Data
+## 5. Regional Information Data
 
 The provided Seoul JSON file is the source of truth for regional information.
 
@@ -289,7 +137,7 @@ Do not scrape external websites.
 
 Do not migrate Seoul regional data into SQLite unless explicitly requested.
 
-Regional information should be loaded and searched through `LocationService`.
+Regional information should be loaded and searched through LocationService.
 
 Treat the provided JSON data as read-only.
 
@@ -298,7 +146,6 @@ Supported regional information categories are based on the actual provided JSON 
 Do not invent fields that are not present in the JSON data.
 
 Before implementing location APIs:
-
 1. Inspect the actual JSON schema.
 2. Identify common and category-specific fields.
 3. Design response schemas based on the real data.
@@ -306,43 +153,22 @@ Before implementing location APIs:
 Never assume latitude, longitude, date, or address fields exist without inspecting the dataset.
 
 
-## 9. Community Post Model
+## 6. Community Post Rules
 
 Community posts are anonymous.
 
 Do not implement user authentication.
 
-The `posts` table contains:
+A post contains:
 
-- `id`
-- `title`
-- `content`
-- `writer`
-- `password`
-- `view_count`
-- `like_count`
-- `created_at`
-- `updated_at`
-
-Recommended schema:
-
-| Column | Type | Description |
-|---|---|---|
-| id | INTEGER | Primary key |
-| title | VARCHAR(200) | Post title |
-| content | TEXT | Post content |
-| writer | VARCHAR(100) | Anonymous writer name |
-| password | VARCHAR(100) | Password used for modification and deletion |
-| view_count | INTEGER | Post view count |
-| like_count | INTEGER | Post like count |
-| created_at | DATETIME | Created timestamp |
-| updated_at | DATETIME | Updated timestamp |
-
-`writer` is a display name entered by the anonymous user.
-
-`writer` does not represent an authenticated user.
-
-Do not create a users table or foreign key for `writer`.
+- id
+- title
+- content
+- password
+- view_count
+- like_count
+- created_at
+- updated_at
 
 The password is used only to authorize post modification and deletion.
 
@@ -352,333 +178,135 @@ Do not replace this behavior with password hashing unless explicitly requested.
 
 However:
 
-- Never include `password` in an API response.
+- Never include password in an API response.
 - Never log password values.
 - Never expose password through exception messages.
-- Never intentionally include password in repr or debug output.
+- Never include password in repr or debug output intentionally.
 
 Password mismatch must return HTTP 403.
 
 Missing posts must return HTTP 404.
 
 
-## 10. Post Validation Rules
+## 7. API Contract
 
-Apply request validation at the API boundary.
+Preserve the following API contract.
 
-Recommended rules:
+### Regional information
 
-- `title`: 1 to 200 characters
-- `content`: at least 1 character
-- `writer`: 1 to 100 characters
-- `password`: 4 to 100 characters
-- `page`: minimum 1
-- `size`: minimum 1
-
-Do not silently truncate invalid values.
-
-Return the common 422 response format for validation failures.
-
-
-## 11. API Contract
-
-Preserve the following API contract unless an explicit requirement change is requested.
-
-### Regional Information
-
-#### GET /api/locations
+GET /api/locations
 
 Query parameters:
 
-- `category`: optional
-- `keyword`: optional
-- `limit`: optional
+- category: optional
+- keyword: optional
+- limit: optional
 
-Example response:
-
-```json
-{
-  "response": 200,
-  "message": "지역 정보 목록 조회에 성공했습니다.",
-  "data": {
-    "items": [],
-    "total": 0
-  }
-}
-```
-
-#### GET /api/locations/{location_id}
-
-Example response:
-
-```json
-{
-  "response": 200,
-  "message": "지역 정보 조회에 성공했습니다.",
-  "data": {
-    "id": "location-001",
-    "name": "지역 정보명"
-  }
-}
-```
+GET /api/locations/{location_id}
 
 
-### Community Posts
+### Community posts
 
-#### GET /api/posts
+GET /api/posts
 
 Query parameters:
 
-- `page`: default 1
-- `size`: default 10
-- `keyword`: optional
+- page: default 1
+- size: default 10
+- keyword: optional
 
-Search `title` and `content` when `keyword` is provided.
+Search the title and content when keyword is provided.
 
-Example response:
-
-```json
-{
-  "response": 200,
-  "message": "게시글 목록 조회에 성공했습니다.",
-  "data": {
-    "items": [
-      {
-        "id": 1,
-        "title": "서울 축제 후기",
-        "writer": "익명여행자",
-        "view_count": 10,
-        "like_count": 2,
-        "created_at": "2026-07-15T10:30:00"
-      }
-    ],
-    "page": 1,
-    "size": 10,
-    "total": 1,
-    "total_pages": 1
-  }
-}
-```
-
-Do not include `password` in list responses.
-
-
-#### GET /api/posts/{post_id}
+GET /api/posts/{post_id}
 
 The detail API increments the post view count.
 
-Example response:
-
-```json
-{
-  "response": 200,
-  "message": "게시글 조회에 성공했습니다.",
-  "data": {
-    "id": 1,
-    "title": "서울 축제 후기",
-    "content": "축제에 다녀왔습니다.",
-    "writer": "익명여행자",
-    "view_count": 11,
-    "like_count": 2,
-    "created_at": "2026-07-15T10:30:00",
-    "updated_at": "2026-07-15T10:30:00"
-  }
-}
-```
-
-Never include `password` in the response.
-
-
-#### POST /api/posts
+POST /api/posts
 
 Request:
 
-```json
 {
-  "title": "서울 맛집 추천합니다",
-  "content": "서울역 근처 맛집 추천합니다.",
-  "writer": "서울러",
-  "password": "1234"
+  "title": "string",
+  "content": "string",
+  "password": "string"
 }
-```
 
-Example response:
-
-```json
-{
-  "response": 201,
-  "message": "게시글 작성에 성공했습니다.",
-  "data": {
-    "id": 1,
-    "title": "서울 맛집 추천합니다",
-    "content": "서울역 근처 맛집 추천합니다.",
-    "writer": "서울러",
-    "view_count": 0,
-    "like_count": 0,
-    "created_at": "2026-07-15T11:00:00",
-    "updated_at": "2026-07-15T11:00:00"
-  }
-}
-```
-
-
-#### PUT /api/posts/{post_id}
+PUT /api/posts/{post_id}
 
 Request:
 
-```json
 {
-  "title": "서울 맛집 추천 수정",
-  "content": "내용을 수정했습니다.",
-  "writer": "서울러",
-  "password": "1234"
+  "title": "string",
+  "content": "string",
+  "password": "string"
 }
-```
 
-The request password is compared with the stored password.
-
-Only update the post when the password matches.
-
-Example response:
-
-```json
-{
-  "response": 200,
-  "message": "게시글 수정에 성공했습니다.",
-  "data": {
-    "id": 1,
-    "title": "서울 맛집 추천 수정",
-    "content": "내용을 수정했습니다.",
-    "writer": "서울러",
-    "view_count": 0,
-    "like_count": 0,
-    "created_at": "2026-07-15T11:00:00",
-    "updated_at": "2026-07-15T11:30:00"
-  }
-}
-```
-
-
-#### DELETE /api/posts/{post_id}
+DELETE /api/posts/{post_id}
 
 Request:
 
-```json
 {
-  "password": "1234"
+  "password": "string"
 }
-```
 
-Example response:
-
-```json
-{
-  "response": 200,
-  "message": "게시글 삭제에 성공했습니다.",
-  "data": null
-}
-```
-
-
-#### POST /api/posts/{post_id}/likes
-
-The request body is empty.
+POST /api/posts/{post_id}/likes
 
 Increment the post like count.
 
-Example response:
-
-```json
-{
-  "response": 200,
-  "message": "게시글 좋아요에 성공했습니다.",
-  "data": {
-    "post_id": 1,
-    "like_count": 3
-  }
-}
-```
-
-The backend does not track user-specific duplicate likes because the service has no authenticated user identity.
-
-Do not create a `post_likes` table for this MVP unless explicitly requested.
+The backend does not track user-specific duplicate likes because the service has no user identity.
 
 
 ### Chatbot
 
-#### POST /api/chat
+POST /api/chat
 
 Request:
 
-```json
 {
-  "message": "이번 주 서울에서 갈 만한 축제 추천해줘"
+  "message": "string"
 }
-```
 
-Example response:
+Response:
 
-```json
 {
-  "response": 200,
-  "message": "챗봇 응답 생성에 성공했습니다.",
-  "data": {
-    "answer": "이번 주 서울에서 진행되는 축제를 안내해드릴게요.",
-    "references": [
-      {
-        "type": "location",
-        "id": "festival-001",
-        "name": "서울 문화 축제"
-      }
-    ]
-  }
+  "answer": "string",
+  "references": []
 }
-```
 
 
 ### Health Check
 
-#### GET /health
+GET /health
 
-Example response:
+Response:
 
-```json
 {
-  "response": 200,
-  "message": "서버가 정상적으로 동작 중입니다.",
-  "data": {
-    "status": "ok"
-  }
+  "status": "ok"
 }
-```
 
 
-## 12. View Count and Like Count
+## 8. View Count and Like Count
 
 Prefer database-side increment operations.
 
 Avoid the following read-modify-write pattern when incrementing counters:
 
-```python
 post.view_count += 1
-```
 
 Prefer an atomic database update equivalent to:
 
-```sql
 UPDATE posts
 SET view_count = view_count + 1
 WHERE id = :post_id;
-```
 
-Apply the same principle to `like_count`.
+Apply the same principle to like_count.
 
 Do not introduce distributed locking or Redis for counters.
 
 
-## 13. Chatbot Rules
+## 9. Chatbot Rules
 
-`POST /api/chat` must answer questions using:
+POST /api/chat must answer questions using:
 
 1. Provided Seoul regional JSON data.
 2. Community post data stored in SQLite.
@@ -700,42 +328,39 @@ Retrieve a small set of relevant records first.
 
 Do not allow the model to present unsupported regional information as confirmed fact.
 
-The system prompt must instruct the model to state that the information cannot be confirmed from the provided Seoul data when relevant information is unavailable.
+The system prompt must instruct the model to say that the information cannot be confirmed from the provided Seoul data when relevant information is unavailable.
 
 Chat history is managed by the frontend.
 
-Do not create `chat_rooms` or `chat_messages` tables.
+Do not create chat_rooms or chat_messages tables.
 
 Do not persist conversation history in SQLite unless explicitly requested.
 
 
-## 14. Environment and Security
+## 10. Environment and Security
 
 All sensitive values must be managed through environment variables.
 
 Examples:
 
-- `OPENAI_API_KEY`
-- `DATABASE_URL`
-- Database path
+- OPENAI_API_KEY
+- DATABASE_URL or database path
 - External service credentials
 
-Use `.env` for local development.
+Use .env for local development.
 
-`.env` must be included in `.gitignore`.
+.env must be included in .gitignore.
 
 Never hard-code API keys.
 
 Never commit secrets.
 
-Provide `.env.example` containing variable names only.
+Provide .env.example containing variable names only.
 
 Example:
 
-```env
 OPENAI_API_KEY=
 DATABASE_URL=
-```
 
 Do not include real secret values in:
 
@@ -746,11 +371,11 @@ Do not include real secret values in:
 - Example requests
 
 
-## 15. FastAPI and Schema Rules
+## 11. FastAPI and Schema Rules
 
 Use Pydantic request and response schemas.
 
-Define `response_model` when practical.
+Define response_model when practical.
 
 Do not return SQLAlchemy ORM models directly without an appropriate response schema.
 
@@ -758,28 +383,26 @@ Validate input at the API boundary.
 
 Use clear HTTP status codes.
 
-Use `HTTPException` or centralized application exceptions consistently, but ensure final client responses are converted to the common API response structure.
+Use HTTPException or centralized exception handling consistently.
 
 Avoid broad exception handling such as:
 
-```python
 except Exception:
     return ...
-```
 
 Do not silently swallow exceptions.
 
 Do not expose internal stack traces or OpenAI API errors directly to clients.
 
 
-## 16. Coding Style
+## 12. Coding Style
 
 Prefer clear and readable Python code.
 
 Use:
 
-- `snake_case` for functions and variables
-- `PascalCase` for classes
+- snake_case for functions and variables
+- PascalCase for classes
 - Explicit type hints
 - Small functions with clear responsibilities
 
@@ -796,7 +419,7 @@ Do not create generic utility classes without a concrete use case.
 Avoid premature abstraction.
 
 
-## 17. Change Workflow
+## 13. Change Workflow
 
 Before modifying code:
 
@@ -811,14 +434,13 @@ Do not immediately rewrite working code.
 Do not perform unrelated refactoring while implementing a feature.
 
 When an existing design conflicts with the requested feature:
-
 1. Explain the conflict.
 2. Present reasonable alternatives.
 3. Compare their advantages and disadvantages.
 4. Select the smallest solution that satisfies the MVP.
 
 
-## 18. Verification
+## 14. Verification
 
 After making a change:
 
@@ -829,7 +451,6 @@ After making a change:
 5. Check that passwords are not exposed.
 6. Check that secrets are not committed.
 7. Confirm that the API contract has not changed unintentionally.
-8. Confirm that success and error responses follow the common response format.
 
 For API changes, verify at least:
 
@@ -841,7 +462,7 @@ For API changes, verify at least:
 Do not claim a test passed unless the test command was actually executed.
 
 
-## 19. Decision Rationale
+## 15. Decision Rationale
 
 For a non-trivial technical decision, record:
 
@@ -871,7 +492,7 @@ Atomic SQL UPDATE
 
 ### Reason for Selection
 
-It avoids the read-modify-write lost update pattern while remaining within the current SQLite architecture.
+It prevents the read-modify-write lost update pattern while remaining within the existing SQLite architecture.
 
 ### Advantages
 
@@ -888,7 +509,7 @@ It avoids the read-modify-write lost update pattern while remaining within the c
 Redis was rejected because distributed counter scalability is outside the project scope.
 
 
-## 20. Final Response Format
+## 16. Final Response Format
 
 After completing a coding task, summarize:
 
@@ -906,3 +527,135 @@ Clearly distinguish:
 - Work not performed
 
 Never state that code was tested if tests were not run.
+
+## Common API Response Format
+
+All application APIs must use the following common response structure.
+
+Success response:
+
+{
+  "response": 200,
+  "message": "요청에 성공했습니다.",
+  "data": {}
+}
+
+Fields:
+
+- response: HTTP status code represented as an integer.
+- message: Human-readable Korean response message.
+- data: Actual response payload.
+
+Do not return raw ORM models, dictionaries, lists, or primitive values directly from API endpoints.
+
+All API responses must be wrapped in the common response structure.
+
+Example:
+
+{
+  "response": 200,
+  "message": "게시글 조회에 성공했습니다.",
+  "data": {
+    "id": 1,
+    "title": "서울 맛집 추천",
+    "content": "서울역 근처 맛집입니다."
+  }
+}
+
+For list responses:
+
+{
+  "response": 200,
+  "message": "게시글 목록 조회에 성공했습니다.",
+  "data": {
+    "items": [],
+    "page": 1,
+    "size": 10,
+    "total": 0,
+    "total_pages": 0
+  }
+}
+
+For create responses:
+
+{
+  "response": 201,
+  "message": "게시글 작성에 성공했습니다.",
+  "data": {
+    "id": 1
+  }
+}
+
+For delete responses:
+
+{
+  "response": 200,
+  "message": "게시글 삭제에 성공했습니다.",
+  "data": null
+}
+
+The response field must match the actual HTTP status code.
+
+Use Korean messages consistently.
+
+Do not expose internal exception messages, stack traces, database errors, or OpenAI API errors through the message field.
+
+## Error Response Format
+
+Error responses must also use the common response structure.
+
+Example:
+
+{
+  "response": 404,
+  "message": "게시글을 찾을 수 없습니다.",
+  "data": null
+}
+
+Password mismatch:
+
+{
+  "response": 403,
+  "message": "비밀번호가 일치하지 않습니다.",
+  "data": null
+}
+
+Validation failure:
+
+{
+  "response": 422,
+  "message": "요청 데이터가 올바르지 않습니다.",
+  "data": null
+}
+
+Internal server error:
+
+{
+  "response": 500,
+  "message": "서버 내부 오류가 발생했습니다.",
+  "data": null
+}
+
+Do not use different response shapes for different exceptions.
+
+The following response formats are prohibited:
+
+{
+  "detail": "..."
+}
+
+{
+  "error": "..."
+}
+
+{
+  "message": "..."
+}
+
+All success and error responses must follow:
+
+{
+  "response": integer,
+  "message": string,
+  "data": any | null
+}
