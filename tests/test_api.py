@@ -144,14 +144,17 @@ class AppApiTests(unittest.TestCase):
 
         self.assertEqual(invalid_password.status_code, 422)
         self.assertEqual(invalid_password.json()["response"], 422)
+        self.assertEqual(invalid_password.json()["message"], "비밀번호가 올바르지 않습니다.")
         self.assertEqual(invalid_page.status_code, 422)
         self.assertEqual(invalid_page.json()["response"], 422)
+        self.assertEqual(invalid_page.json()["message"], "페이지 번호는 1 이상이어야 합니다.")
 
     def test_chat_validation_uses_common_response(self) -> None:
         response = self.client.post("/api/chat", json={})
 
         self.assertEqual(response.status_code, 422)
         self.assertEqual(response.json()["response"], 422)
+        self.assertEqual(response.json()["message"], "메시지를 입력해주세요.")
 
 
 if __name__ == "__main__":
